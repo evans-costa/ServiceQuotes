@@ -17,6 +17,8 @@ public class ServiceQuoteApiContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Quote>()
             .HasMany(e => e.Products)
             .WithMany(e => e.Quotes)
