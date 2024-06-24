@@ -9,7 +9,6 @@ public class ServiceQuoteApiContext : DbContext
     {
 
     }
-
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Quote> Quotes { get; set; }
@@ -23,5 +22,21 @@ public class ServiceQuoteApiContext : DbContext
             .HasMany(e => e.Products)
             .WithMany(e => e.Quotes)
             .UsingEntity<QuoteProducts>();
+
+        //ConfigureTimestamps<Quote>(modelBuilder);
+        //ConfigureTimestamps<Product>(modelBuilder);
+        //ConfigureTimestamps<Customer>(modelBuilder);
+
     }
+
+    //private void ConfigureTimestamps<TEntity>(ModelBuilder modelBuilder) where TEntity : class
+    //{
+    //    modelBuilder.Entity<TEntity>()
+    //        .Property<DateTime>("CreatedAt")
+    //        .HasDefaultValueSql("GETUTCDATE()");
+
+    //    modelBuilder.Entity<TEntity>()
+    //        .Property<DateTime>("UpdatedAt")
+    //        .HasDefaultValueSql("GETUTCDATE()");
+    //}
 }
