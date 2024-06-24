@@ -12,6 +12,4 @@ public class QuoteProducts
     [Required]
     [Column(TypeName = "decimal(10,2)")]
     public decimal Price { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 }
