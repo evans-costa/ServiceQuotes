@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServiceQuotes.Context;
 
@@ -11,9 +12,11 @@ using ServiceQuotes.Context;
 namespace ServiceQuotes.Migrations
 {
     [DbContext(typeof(ServiceQuoteApiContext))]
-    partial class ServiceQuoteApiContextModelSnapshot : ModelSnapshot
+    [Migration("20240622002308_AlterColumnDateTimeQuoteProducts")]
+    partial class AlterColumnDateTimeQuoteProducts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
