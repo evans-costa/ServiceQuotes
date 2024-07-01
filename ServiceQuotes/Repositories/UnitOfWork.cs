@@ -7,6 +7,7 @@ public class UnitOfWork : IUnitOfWork
 {
     private ICustomerRepository? _customerRepository;
     private IProductRepository? _productRepository;
+    private IQuotesRepository? _quotesRepository;
     public ServiceQuoteApiContext _context;
 
     public UnitOfWork(ServiceQuoteApiContext context)
@@ -27,6 +28,14 @@ public class UnitOfWork : IUnitOfWork
         get
         {
             return _productRepository ??= new ProductRepository(_context);
+        }
+    }
+
+    public IQuotesRepository QuotesRepository
+    {
+        get
+        {
+            return _quotesRepository ??= new QuotesRepository(_context);
         }
     }
 
