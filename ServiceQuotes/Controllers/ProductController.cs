@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using ServiceQuotes.DTOs;
+using ServiceQuotes.DTOs.ResponseDTO;
 using ServiceQuotes.Models;
 using ServiceQuotes.Pagination;
 using ServiceQuotes.Repositories.Interfaces;
@@ -23,7 +23,7 @@ public class ProductController : ControllerBase
         _unitOfWork = unitOfWork;
     }
 
-    private ActionResult<IEnumerable<ProductRequestDTO>> GetProducts(IPagedList<Product> product)
+    private ActionResult<IEnumerable<ProductDTO>> GetProducts(IPagedList<Product> product)
     {
         var metadata = new
         {
@@ -37,13 +37,13 @@ public class ProductController : ControllerBase
 
         Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
 
-        var productDto = _mapper.Map<IEnumerable<ProductRequestDTO>>(product);
+        var productDto = _mapper.Map<IEnumerable<ProductDTO>>(product);
 
         return Ok(productDto);
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductRequestDTO>>> GetAll([FromQuery] QueryParameters productParams)
+    public async Task<ActionResult<IEnumerable<ProductDTO>>> GetAll([FromQuery] QueryParameters productParams)
     {
         var products = await _unitOfWork.ProductRepository.GetProductsAsync(productParams);
 
@@ -56,7 +56,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet("{id:guid}", Name = "GetProduct")]
-    public async Task<ActionResult<ProductRequestDTO>> GetById(Guid
+    public async Task<ActionResult<ProductDTO>> GetById(Guid
         id)
     {
         var product = await _unitOfWork.ProductRepository.GetAsync(p => p.ProductId == id);
@@ -64,13 +64,13 @@ public class ProductController : ControllerBase
         if (product is null)
             return NotFound();
 
-        var productDto = _mapper.Map<ProductRequestDTO>(product);
+        var productDto = _mapper.Map<ProductDTO>(product);
 
         return Ok(productDto);
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProductRequestDTO>> Create(ProductRequestDTO productDto)
+    public async Task<ActionResult<ProductDTO>> Create(ProductDTO productDto)
     {
         if (productDto is null)
         {
@@ -83,7 +83,7 @@ public class ProductController : ControllerBase
 
         await _unitOfWork.CommitAsync();
 
-        var newProduct = _mapper.Map<ProductRequestDTO>(createdProduct);
+        var newProduct = _mapper.Map<ProductDTO>(createdProduct);
 
         return new CreatedAtRouteResult("GetProduct", new
         {
