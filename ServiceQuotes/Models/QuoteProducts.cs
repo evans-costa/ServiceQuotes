@@ -6,7 +6,9 @@ namespace ServiceQuotes.Models;
 public class QuoteProducts
 {
     public Guid ProductId { get; set; }
+
     public int QuoteId { get; set; }
+
     [Required]
     public int Quantity { get; set; }
     [Required]
