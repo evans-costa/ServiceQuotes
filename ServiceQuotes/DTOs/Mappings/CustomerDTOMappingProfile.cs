@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ServiceQuotes.DTOs.RequestDTO;
 using ServiceQuotes.Models;
 
 namespace ServiceQuotes.DTOs.Mappings;
