@@ -23,6 +23,10 @@ public class ServiceQuoteApiContext : DbContext
             .WithMany(e => e.Quotes)
             .UsingEntity<QuoteProducts>();
 
+        modelBuilder.Entity<Quote>()
+            .Property(e => e.CreatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
+
         //ConfigureTimestamps<Quote>(modelBuilder);
         //ConfigureTimestamps<Product>(modelBuilder);
         //ConfigureTimestamps<Customer>(modelBuilder);
