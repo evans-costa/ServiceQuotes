@@ -14,6 +14,7 @@ public class QuoteDTOMappingProfile : Profile
 
         CreateMap<Quote, QuoteDetailedResponseDTO>()
             .ForMember(dest => dest.Products, opt => opt.MapFrom(src => src.Products))
+            .ForMember(dest => dest.CustomerInfo, opt => opt.MapFrom(src => src.Customer))
             .ReverseMap();
 
         CreateMap<QuoteProducts, QuoteProductsRequestDTO>().ReverseMap();

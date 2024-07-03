@@ -2,10 +2,9 @@
 
 namespace ServiceQuotes.DTOs.RequestDTO;
 
-public class AddProductsToQuoteRequestDTO
+public class QuoteWithProductRequestDTO
 {
     [Required]
-    public int QuoteId { get; set; }
-    [Required]
+    public QuoteRequestDTO? Quote { get; set; }
     public List<QuoteProductsRequestDTO>? Products { get; set; }
 }
