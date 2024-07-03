@@ -2,15 +2,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using ServiceQuotes.DTOs.RequestDTO;
 using ServiceQuotes.DTOs.ResponseDTO;
 using ServiceQuotes.Models;
 using ServiceQuotes.Pagination;
 using ServiceQuotes.Repositories.Interfaces;
+using System.Net.Mime;
 using X.PagedList;
 
 namespace ServiceQuotes.Controllers;
 
 [Route("api/[controller]")]
+[Produces("application/json")]
 [ApiController]
 public class ProductController : ControllerBase
 {
@@ -23,7 +26,7 @@ public class ProductController : ControllerBase
         _unitOfWork = unitOfWork;
     }
 
-    private ActionResult<IEnumerable<ProductDTO>> GetProducts(IPagedList<Product> product)
+    private ActionResult<IEnumerable<ProductResponseDTO>> GetProducts(IPagedList<Product> product)
     {
         var metadata = new
         {
@@ -37,44 +40,48 @@ public class ProductController : ControllerBase
 
         Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
 
-        var productDto = _mapper.Map<IEnumerable<ProductDTO>>(product);
+        var productDto = _mapper.Map<IEnumerable<ProductResponseDTO>>(product);
 
         return Ok(productDto);
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductDTO>>> GetAll([FromQuery] QueryParameters productParams)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetAllProducts([FromQuery] QueryParameters productParams)
     {
         var products = await _unitOfWork.ProductRepository.GetProductsAsync(productParams);
 
         if (products is null || products.IsNullOrEmpty())
-        {
-            return NotFound();
-        }
+            return NotFound("Produtos não encontrados.");
 
         return GetProducts(products);
     }
 
-    [HttpGet("{id:guid}", Name = "GetProduct")]
-    public async Task<ActionResult<ProductDTO>> GetById(Guid
-        id)
+    [HttpGet("{id:guid}", Name = "GetProductById")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProductResponseDTO>> GetProductById(Guid id)
     {
         var product = await _unitOfWork.ProductRepository.GetAsync(p => p.ProductId == id);
 
         if (product is null)
-            return NotFound();
+            return NotFound("Produto não encontrado.");
 
-        var productDto = _mapper.Map<ProductDTO>(product);
+        var productDto = _mapper.Map<ProductResponseDTO>(product);
 
         return Ok(productDto);
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProductDTO>> Create(ProductDTO productDto)
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ProductResponseDTO>> CreateProduct(ProductRequestDTO productDto)
     {
         if (productDto is null)
         {
-            return BadRequest();
+            return BadRequest("Digite os dados do produto corretamente.");
         }
 
         var product = _mapper.Map<Product>(productDto);
@@ -83,9 +90,9 @@ public class ProductController : ControllerBase
 
         await _unitOfWork.CommitAsync();
 
-        var newProduct = _mapper.Map<ProductDTO>(createdProduct);
+        var newProduct = _mapper.Map<ProductResponseDTO>(createdProduct);
 
-        return new CreatedAtRouteResult("GetProduct", new
+        return new CreatedAtRouteResult("GetProductById", new
         {
             id = newProduct.ProductId
         }, newProduct);
