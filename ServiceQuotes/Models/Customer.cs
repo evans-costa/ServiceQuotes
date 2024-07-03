@@ -22,5 +22,5 @@ public class Customer
     public DateTime UpdatedAt { get; set; }
 
     [JsonIgnore]
-    public ICollection<Quote>? Quotes { get; }
+    public ICollection<Quote> Quotes { get; }
 }
