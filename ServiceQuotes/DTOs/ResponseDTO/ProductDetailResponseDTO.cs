@@ -1,6 +1,6 @@
 ﻿namespace ServiceQuotes.DTOs.ResponseDTO;
 
-public class ProductDetailDTO
+public class ProductDetailResponseDTO
 {
     public string? Name { get; set; }
     public decimal Price { get; set; }

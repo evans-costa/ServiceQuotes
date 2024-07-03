@@ -12,7 +12,7 @@ public class ProductDTOMappingProfile : Profile
         CreateMap<Product, ProductResponseDTO>().ReverseMap();
         CreateMap<Product, ProductRequestDTO>().ReverseMap();
 
-        CreateMap<Product, ProductDetailDTO>()
+        CreateMap<Product, ProductDetailResponseDTO>()
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.QuoteProducts.FirstOrDefault()!.Price))
             .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.QuoteProducts.FirstOrDefault()!.Quantity))
