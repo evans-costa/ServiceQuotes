@@ -15,7 +15,6 @@ public class Customer
     public Guid CustomerId { get; set; }
 
     [Required]
-    [StringLength(80)]
     public string? Name { get; set; }
     public string? Phone { get; set; }
     public DateTime CreatedAt { get; set; }

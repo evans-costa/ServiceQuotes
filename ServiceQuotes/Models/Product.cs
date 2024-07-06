@@ -15,7 +15,7 @@ public class Product
     public Guid ProductId { get; set; }
 
     [Required]
-    [StringLength(200)]
+    [StringLength(200, MinimumLength = 5)]
     public string? Name { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
