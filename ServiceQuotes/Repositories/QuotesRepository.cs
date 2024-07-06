@@ -13,6 +13,17 @@ public class QuotesRepository : Repository<Quote>, IQuotesRepository
     {
     }
 
+    public async Task<IPagedList<Quote>> GetQuotesAsync(QueryParameters quoteParams)
+    {
+        var quotes = await GetAllAsync();
+
+        var orderedQuotes = quotes.OrderBy(q => q.QuoteId).AsQueryable();
+
+        var result = await orderedQuotes.ToPagedListAsync(quoteParams.PageNumber, quoteParams.PageSize);
+
+        return result;
+    }
+
     public async Task<Quote?> GetDetailedQuoteAsync(int id)
     {
         var detailedQuote = await _context.Quotes
