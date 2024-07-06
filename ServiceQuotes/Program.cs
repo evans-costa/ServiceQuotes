@@ -1,13 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using ServiceQuotes.Context;
-using ServiceQuotes.DTOs.Mappings;
+using ServiceQuotes.Extensions;
+using ServiceQuotes.Logging;
+using ServiceQuotes.Mappings;
 using ServiceQuotes.Repositories;
 using ServiceQuotes.Repositories.Interfaces;
 using ServiceQuotes.Services;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration
+{
+    LogLevel = LogLevel.Information,
+}));
 
 // Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -45,6 +54,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.ConfigureExceptionHandler();
 }
 
 app.UseHttpsRedirection();
