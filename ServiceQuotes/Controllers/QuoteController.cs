@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using ServiceQuotes.DTOs.RequestDTO;
-using ServiceQuotes.DTOs.ResponseDTO;
+using ServiceQuotes.DTOs.Quote;
 using ServiceQuotes.Models;
 using ServiceQuotes.Pagination;
 using ServiceQuotes.Repositories.Interfaces;
@@ -20,12 +19,14 @@ public class QuoteController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ILogger<QuoteController> _logger;
     private readonly IInvoiceService _invoiceService;
 
-    public QuoteController(IUnitOfWork unitOfWork, IMapper mapper, IInvoiceService invoiceService)
+    public QuoteController(IUnitOfWork unitOfWork, IMapper mapper, ILogger<QuoteController> logger, IInvoiceService invoiceService)
     {
         _unitOfWork = unitOfWork;
         _invoiceService = invoiceService;
+        _logger = logger;
         _mapper = mapper;
     }
 
@@ -62,15 +63,38 @@ public class QuoteController : ControllerBase
         return null;
     }
 
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<QuoteResponseDTO>>> GetAllQuotes([FromQuery] QueryParameters quoteParams)
+    {
+        _logger.LogInformation("### Get all quotes: GET api/qutoe/ ###");
+
+        var quotes = await _unitOfWork.QuotesRepository.GetQuotesAsync(quoteParams);
+
+        if (quotes is null)
+        {
+            _logger.LogWarning("Quotes not found.");
+            return NotFound("Orçamentos não encontrados");
+        }
+
+        return GetQuotes(quotes);
+    }
+
     [HttpGet("{id:int}", Name = "GetQuoteDetailsById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<QuoteDetailedResponseDTO>> GetQuoteDetailsById(int id)
     {
+        _logger.LogInformation("### Get a detailed quote by ID: GET api/quote/{id} ###", id);
+
         var quote = await GetDetailedQuoteDtoAsync(id);
 
         if (quote is null)
+        {
+            _logger.LogWarning("Quote with {id} not found.", id);
             return NotFound("Orçamento não encontrado");
+        }
 
         return Ok(quote);
     }
@@ -81,10 +105,15 @@ public class QuoteController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetInvoiceByQuoteId(int id)
     {
+        _logger.LogInformation("### Get an invoice document by quote ID: GET api/quote/{id}/invoice ###", id);
+
         var quote = await GetDetailedQuoteDtoAsync(id);
 
         if (quote is null)
+        {
+            _logger.LogWarning("Quote with {id} not found.", id);
             return NotFound("Orçamento não encontrado");
+        }
 
         var invoiceDocument = _invoiceService.GenerateInvoiceDocument(quote);
 
@@ -97,10 +126,13 @@ public class QuoteController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<QuoteResponseDTO>>> GetQuoteBySearch([FromQuery] QuoteFilterParams quoteParams)
     {
+        _logger.LogInformation("### Get a quote by search criteria: GET api/quote/search/{quoteParams} ###", quoteParams);
+
         var quotes = await _unitOfWork.QuotesRepository.SearchQuotesAsync(quoteParams);
 
         if (quotes is null || quotes.IsNullOrEmpty())
         {
+            _logger.LogWarning("Quote not found by informed {quoteParams} search criteria", quoteParams);
             return NotFound("Orçamento não encontrado pelos critérios desejados.");
         }
 
@@ -112,10 +144,14 @@ public class QuoteController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<QuoteResponseDTO>> AddProductsToQuote
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<QuoteResponseDTO>> CreateQuote
         ([FromBody] QuoteWithProductRequestDTO quoteWithProductsDto)
     {
-        if (quoteWithProductsDto.Products is null || quoteWithProductsDto.Quote is null || quoteWithProductsDto is null)
+
+        _logger.LogInformation("### Create a quote: POST api/quote");
+
+        if (quoteWithProductsDto is null || quoteWithProductsDto is { Products: null } or { Quote: null })
             return BadRequest("Informe os dados do orçamento corretamente.");
 
         var quote = _mapper.Map<Quote>(quoteWithProductsDto.Quote);
@@ -125,7 +161,16 @@ public class QuoteController : ControllerBase
             var productExists = await _unitOfWork.ProductRepository.GetAsync(e => e.ProductId == product.ProductId);
 
             if (productExists is null)
-                return NotFound("Produto não encontrado");
+            {
+                _logger.LogWarning("Product not found.");
+                return NotFound("Produto não encontrado.");
+            }
+
+            if (quote.QuotesProducts.Any(qp => qp.ProductId == product.ProductId))
+            {
+                _logger.LogWarning("Product {product} already in this quote", productExists.Name);
+                return Conflict("Produto duplicado no orçamento.");
+            }
 
             var quoteProduct = _mapper.Map<QuoteProducts>(product);
 
