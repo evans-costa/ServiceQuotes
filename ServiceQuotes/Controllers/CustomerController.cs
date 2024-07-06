@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using ServiceQuotes.DTOs.RequestDTO;
-using ServiceQuotes.DTOs.ResponseDTO;
+using ServiceQuotes.DTOs.Customer;
 using ServiceQuotes.Models;
 using ServiceQuotes.Pagination;
 using ServiceQuotes.Repositories.Interfaces;
@@ -19,11 +18,13 @@ public class CustomerController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ILogger<CustomerController> _logger;
 
-    public CustomerController(IUnitOfWork unitOfWork, IMapper mapper)
+    public CustomerController(IUnitOfWork unitOfWork, IMapper mapper, ILogger<CustomerController> logger)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _logger = logger;
     }
 
     private ActionResult<IEnumerable<CustomerResponseDTO>> GetCustomers(IPagedList<Customer> customers)
@@ -50,10 +51,15 @@ public class CustomerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<CustomerResponseDTO>>> GetAllCustomers([FromQuery] QueryParameters customerParams)
     {
+        _logger.LogInformation("### Get all customers: GET api/customer ###");
+
         var customers = await _unitOfWork.CustomerRepository.GetCustomersAsync(customerParams);
 
         if (customers is null || customers.IsNullOrEmpty())
+        {
+            _logger.LogWarning("Customers not found.");
             return NotFound("Clientes não encontrados.");
+        }
 
         return GetCustomers(customers);
     }
@@ -63,10 +69,16 @@ public class CustomerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CustomerResponseDTO>> GetCustomerById(Guid id)
     {
+        _logger.LogInformation("### Get a customer by ID: GET api/customer/{id} ###", id);
+
         var customer = await _unitOfWork.CustomerRepository.GetAsync(c => c.CustomerId == id);
 
         if (customer is null)
+        {
+            _logger.LogWarning("Customer with {id} not found.", id);
             return NotFound("Cliente não encontrado.");
+        }
+
 
         var customerDto = _mapper.Map<CustomerResponseDTO>(customer);
 
@@ -79,8 +91,12 @@ public class CustomerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CustomerResponseDTO>> CreateCustomer(CustomerRequestDTO customerDto)
     {
+        _logger.LogInformation("### Create a customer: POST api/customer ###");
+
         if (customerDto == null)
+        {
             return BadRequest("Digite os dados do cliente corretamente.");
+        }
 
         var customer = _mapper.Map<Customer>(customerDto);
 
