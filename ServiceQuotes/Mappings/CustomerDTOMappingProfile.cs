@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
-using ServiceQuotes.DTOs.RequestDTO;
-using ServiceQuotes.DTOs.ResponseDTO;
+using ServiceQuotes.DTOs.Customer;
 using ServiceQuotes.Models;
 
-namespace ServiceQuotes.DTOs.Mappings;
+namespace ServiceQuotes.Mappings;
 
 public class CustomerDTOMappingProfile : Profile
 {

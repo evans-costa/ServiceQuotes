@@ -1,4 +1,4 @@
-﻿namespace ServiceQuotes.DTOs.ResponseDTO;
+﻿namespace ServiceQuotes.DTOs.Quote;
 
 public class QuoteResponseDTO
 {

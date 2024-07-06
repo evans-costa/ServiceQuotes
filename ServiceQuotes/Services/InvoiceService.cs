@@ -1,5 +1,5 @@
 ﻿using QuestPDF.Fluent;
-using ServiceQuotes.DTOs.ResponseDTO;
+using ServiceQuotes.DTOs.Quote;
 using ServiceQuotes.Helpers;
 using ServiceQuotes.Models;
 

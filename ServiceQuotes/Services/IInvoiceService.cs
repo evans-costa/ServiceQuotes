@@ -1,4 +1,4 @@
-﻿using ServiceQuotes.DTOs.ResponseDTO;
+﻿using ServiceQuotes.DTOs.Quote;
 
 namespace ServiceQuotes.Services;
 

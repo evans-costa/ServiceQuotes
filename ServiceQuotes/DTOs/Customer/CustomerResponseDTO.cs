@@ -1,4 +1,4 @@
-﻿namespace ServiceQuotes.DTOs.ResponseDTO;
+﻿namespace ServiceQuotes.DTOs.Customer;
 
 public class CustomerResponseDTO
 {

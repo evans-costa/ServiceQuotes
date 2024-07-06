@@ -1,4 +1,7 @@
-﻿namespace ServiceQuotes.DTOs.ResponseDTO;
+﻿using ServiceQuotes.DTOs.Customer;
+using ServiceQuotes.DTOs.Product;
+
+namespace ServiceQuotes.DTOs.Quote;
 
 public class QuoteDetailedResponseDTO
 {
