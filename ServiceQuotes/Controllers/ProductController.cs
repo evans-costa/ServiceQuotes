@@ -11,7 +11,7 @@ using X.PagedList;
 
 namespace ServiceQuotes.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 [ApiController]
 public class ProductController : ControllerBase

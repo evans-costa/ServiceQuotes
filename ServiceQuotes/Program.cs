@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using ServiceQuotes.Context;
@@ -36,6 +37,18 @@ var sqlServerConnection = builder.Configuration["ConnectionStrings:DefaultConnec
 builder.Services.AddDbContext<ServiceQuoteApiContext>(options =>
 {
     options.UseSqlServer(sqlServerConnection);
+});
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader());
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
 });
 
 QuestPDF.Settings.License = LicenseType.Community;
