@@ -26,21 +26,5 @@ public class ServiceQuoteApiContext : DbContext
         modelBuilder.Entity<Quote>()
             .Property(e => e.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
-
-        //ConfigureTimestamps<Quote>(modelBuilder);
-        //ConfigureTimestamps<Product>(modelBuilder);
-        //ConfigureTimestamps<Customer>(modelBuilder);
-
     }
-
-    //private void ConfigureTimestamps<TEntity>(ModelBuilder modelBuilder) where TEntity : class
-    //{
-    //    modelBuilder.Entity<TEntity>()
-    //        .Property<DateTime>("CreatedAt")
-    //        .HasDefaultValueSql("GETUTCDATE()");
-
-    //    modelBuilder.Entity<TEntity>()
-    //        .Property<DateTime>("UpdatedAt")
-    //        .HasDefaultValueSql("GETUTCDATE()");
-    //}
 }
