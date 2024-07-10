@@ -152,7 +152,7 @@ public class QuoteController : ControllerBase
         _logger.LogInformation("### Create a quote: POST api/quote");
 
         if (quoteWithProductsDto is null || quoteWithProductsDto is { Products: null } or { Quote: null })
-            return BadRequest("Informe os dados do orçamento corretamente.");
+            return BadRequest();
 
         var quote = _mapper.Map<Quote>(quoteWithProductsDto.Quote);
 

@@ -94,7 +94,7 @@ public class ProductController : ControllerBase
 
         if (productDto is null)
         {
-            return BadRequest("Digite os dados do produto corretamente.");
+            return BadRequest();
         }
 
         var product = _mapper.Map<Product>(productDto);

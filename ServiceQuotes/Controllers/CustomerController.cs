@@ -95,7 +95,7 @@ public class CustomerController : ControllerBase
 
         if (customerDto == null)
         {
-            return BadRequest("Digite os dados do cliente corretamente.");
+            return BadRequest();
         }
 
         var customer = _mapper.Map<Customer>(customerDto);
