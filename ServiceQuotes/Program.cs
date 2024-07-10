@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using ServiceQuotes.Context;
 using ServiceQuotes.Extensions;
+using ServiceQuotes.Filters;
 using ServiceQuotes.Logging;
 using ServiceQuotes.Mappings;
 using ServiceQuotes.Repositories;
@@ -19,7 +20,10 @@ builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderCon
 }));
 
 // Add services to the container.
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(ApiExceptionFilter));
+}).AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
