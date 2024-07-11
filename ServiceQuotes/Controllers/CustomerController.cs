@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using ServiceQuotes.DTOs.Customer;
+using ServiceQuotes.Exceptions;
 using ServiceQuotes.Models;
 using ServiceQuotes.Pagination;
 using ServiceQuotes.Repositories.Interfaces;
+using ServiceQuotes.Resources;
 using System.Net.Mime;
 using X.PagedList;
 
@@ -56,10 +58,7 @@ public class CustomerController : ControllerBase
         var customers = await _unitOfWork.CustomerRepository.GetCustomersAsync(customerParams);
 
         if (customers is null || customers.IsNullOrEmpty())
-        {
-            _logger.LogWarning("Customers not found.");
-            return NotFound("Clientes não encontrados.");
-        }
+            throw new NotFoundException(ExceptionMessages.CUSTOMER_NOT_FOUND);
 
         return GetCustomers(customers);
     }
@@ -74,10 +73,7 @@ public class CustomerController : ControllerBase
         var customer = await _unitOfWork.CustomerRepository.GetAsync(c => c.CustomerId == id);
 
         if (customer is null)
-        {
-            _logger.LogWarning("Customer with {id} not found.", id);
-            return NotFound("Cliente não encontrado.");
-        }
+            throw new NotFoundException(ExceptionMessages.CUSTOMER_NOT_FOUND);
 
 
         var customerDto = _mapper.Map<CustomerResponseDTO>(customer);

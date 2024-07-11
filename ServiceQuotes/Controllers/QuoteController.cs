@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using ServiceQuotes.DTOs.Quote;
+using ServiceQuotes.Exceptions;
 using ServiceQuotes.Models;
 using ServiceQuotes.Pagination;
 using ServiceQuotes.Repositories.Interfaces;
+using ServiceQuotes.Resources;
 using ServiceQuotes.Services;
 using System.Net.Mime;
 using X.PagedList;
@@ -73,10 +75,7 @@ public class QuoteController : ControllerBase
         var quotes = await _unitOfWork.QuotesRepository.GetQuotesAsync(quoteParams);
 
         if (quotes is null)
-        {
-            _logger.LogWarning("Quotes not found.");
-            return NotFound("Orçamentos não encontrados");
-        }
+            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
 
         return GetQuotes(quotes);
     }
@@ -91,10 +90,7 @@ public class QuoteController : ControllerBase
         var quote = await GetDetailedQuoteDtoAsync(id);
 
         if (quote is null)
-        {
-            _logger.LogWarning("Quote with {id} not found.", id);
-            return NotFound("Orçamento não encontrado");
-        }
+            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
 
         return Ok(quote);
     }
@@ -110,10 +106,7 @@ public class QuoteController : ControllerBase
         var quote = await GetDetailedQuoteDtoAsync(id);
 
         if (quote is null)
-        {
-            _logger.LogWarning("Quote with {id} not found.", id);
-            return NotFound("Orçamento não encontrado");
-        }
+            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
 
         var invoiceDocument = _invoiceService.GenerateInvoiceDocument(quote);
 
@@ -131,10 +124,7 @@ public class QuoteController : ControllerBase
         var quotes = await _unitOfWork.QuotesRepository.SearchQuotesAsync(quoteParams);
 
         if (quotes is null || quotes.IsNullOrEmpty())
-        {
-            _logger.LogWarning("Quote not found by informed {quoteParams} search criteria", quoteParams);
-            return NotFound("Orçamento não encontrado pelos critérios desejados.");
-        }
+            throw new NotFoundException(ExceptionMessages.QUOTE_SEARCH_NOT_FOUND);
 
         return GetQuotes(quotes);
     }
@@ -161,10 +151,7 @@ public class QuoteController : ControllerBase
             var productExists = await _unitOfWork.ProductRepository.GetAsync(e => e.ProductId == product.ProductId);
 
             if (productExists is null)
-            {
-                _logger.LogWarning("Product not found.");
-                return NotFound("Produto não encontrado.");
-            }
+                throw new NotFoundException(ExceptionMessages.PRODUCT_NOT_FOUND);
 
             if (quote.QuotesProducts.Any(qp => qp.ProductId == product.ProductId))
             {

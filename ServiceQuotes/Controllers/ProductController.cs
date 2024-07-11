@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using ServiceQuotes.DTOs.Product;
+using ServiceQuotes.Exceptions;
 using ServiceQuotes.Models;
 using ServiceQuotes.Pagination;
 using ServiceQuotes.Repositories.Interfaces;
+using ServiceQuotes.Resources;
 using System.Net.Mime;
 using X.PagedList;
 
@@ -56,10 +58,7 @@ public class ProductController : ControllerBase
         var products = await _unitOfWork.ProductRepository.GetProductsAsync(productParams);
 
         if (products is null || products.IsNullOrEmpty())
-        {
-            _logger.LogWarning("Products not found.");
-            return NotFound("Produtos não encontrados.");
-        }
+            throw new NotFoundException(ExceptionMessages.PRODUCT_NOT_FOUND);
 
         return GetProducts(products);
     }
@@ -74,10 +73,7 @@ public class ProductController : ControllerBase
         var product = await _unitOfWork.ProductRepository.GetAsync(p => p.ProductId == id);
 
         if (product is null)
-        {
-            _logger.LogWarning("Product with {id} not found", id);
-            return NotFound("Produto não encontrado.");
-        }
+            throw new NotFoundException(ExceptionMessages.PRODUCT_NOT_FOUND);
 
         var productDto = _mapper.Map<ProductResponseDTO>(product);
 
