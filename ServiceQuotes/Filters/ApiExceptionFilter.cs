@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using ServiceQuotes.Exceptions;
 
 namespace ServiceQuotes.Filters;
 
@@ -14,11 +15,18 @@ public class ApiExceptionFilter : IExceptionFilter
 
     public void OnException(ExceptionContext context)
     {
-        _logger.LogError(context.Exception, "Um erro desconhecido ocorreu.");
-
-        context.Result = new ObjectResult("Um erro desconhecido ocorreu.")
+        if (context.Exception is ServiceQuoteException)
         {
-            StatusCode = StatusCodes.Status500InternalServerError,
-        };
+            var serviceQuoteException = (ServiceQuoteException) context.Exception;
+
+            context.HttpContext.Response.StatusCode = (int) serviceQuoteException.GetStatusCode();
+
+            var response = new ResponseExceptionError(serviceQuoteException.GetErrorMessages());
+
+            context.Result = new NotFoundObjectResult(response);
+
+            _logger.LogWarning(context.Exception, "Erros: {Message}", context.Exception.Message);
+
+        }
     }
 }
