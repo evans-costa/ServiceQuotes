@@ -24,6 +24,7 @@ builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderCon
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add(typeof(ApiExceptionFilter));
+
 }).AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -71,8 +72,9 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.ConfigureExceptionHandler();
 }
+
+app.ConfigureExceptionHandler(app.Environment);
 
 app.UseHttpsRedirection();
 
