@@ -23,13 +23,15 @@ public class QuoteController : ControllerBase
     private readonly IMapper _mapper;
     private readonly ILogger<QuoteController> _logger;
     private readonly IInvoiceService _invoiceService;
+    private readonly IS3BucketService _bucketService;
 
-    public QuoteController(IUnitOfWork unitOfWork, IMapper mapper, ILogger<QuoteController> logger, IInvoiceService invoiceService)
+    public QuoteController(IUnitOfWork unitOfWork, IMapper mapper, ILogger<QuoteController> logger, IInvoiceService invoiceService, IS3BucketService bucketService)
     {
         _unitOfWork = unitOfWork;
         _invoiceService = invoiceService;
         _logger = logger;
         _mapper = mapper;
+        _bucketService = bucketService;
     }
 
     private ActionResult<IEnumerable<QuoteResponseDTO>> GetQuotes(IPagedList<Quote> quotes)
@@ -65,6 +67,42 @@ public class QuoteController : ControllerBase
         return null;
     }
 
+    private async Task<string> UploadInvoiceDocument(QuoteDetailedResponseDTO quote)
+    {
+        var invoiceDocument = _invoiceService.GenerateInvoiceDocument(quote);
+
+        var fileName = $"invoice_{quote.CreatedAt:yyyyMMddTHHmmss}_{quote.QuoteId:d8}.pdf";
+
+        var fileUrl = await _bucketService.UploadFileToS3(invoiceDocument, fileName);
+
+        return fileUrl;
+    }
+
+    private async Task<string> GenerateInvoiceUrl(int id)
+    {
+        var quote = await GetDetailedQuoteDtoAsync(id);
+
+        if (quote is null)
+            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
+
+        var generateInvoiceUrl = await UploadInvoiceDocument(quote);
+
+        return generateInvoiceUrl;
+    }
+
+    private async Task SaveInvoiceOnQuote(int id)
+    {
+        var updatedQuote = await _unitOfWork.QuotesRepository.GetAsync(q => q.QuoteId == id);
+
+        if (updatedQuote is null)
+            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
+
+        updatedQuote.FileUrl = await GenerateInvoiceUrl(id);
+
+        _unitOfWork.QuotesRepository.Update(updatedQuote);
+        await _unitOfWork.CommitAsync();
+    }
+
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -95,25 +133,6 @@ public class QuoteController : ControllerBase
         return Ok(quote);
     }
 
-    [HttpGet("{id:int}/invoice")]
-    [Produces("application/pdf")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetInvoiceByQuoteId(int id)
-    {
-        _logger.LogInformation("### Get an invoice document by quote ID: GET api/quote/{id}/invoice ###", id);
-
-        var quote = await GetDetailedQuoteDtoAsync(id);
-
-        if (quote is null)
-            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
-
-        var invoiceDocument = _invoiceService.GenerateInvoiceDocument(quote);
-
-        return File(invoiceDocument, "application/pdf",
-            $"invoice_{quote.CreatedAt:yyyyMMddTHHmmss}_{id:d8}.pdf");
-    }
-
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -138,7 +157,6 @@ public class QuoteController : ControllerBase
     public async Task<ActionResult<QuoteResponseDTO>> CreateQuote
         ([FromBody] QuoteWithProductRequestDTO quoteWithProductsDto)
     {
-
         _logger.LogInformation("### Create a quote: POST api/quote");
 
         if (quoteWithProductsDto is null || quoteWithProductsDto is { Products: null } or { Quote: null })
@@ -169,6 +187,8 @@ public class QuoteController : ControllerBase
         _unitOfWork.QuotesRepository.Create(quote);
 
         await _unitOfWork.CommitAsync();
+
+        await SaveInvoiceOnQuote(quote.QuoteId);
 
         var newQuoteDto = _mapper.Map<QuoteResponseDTO>(quote);
 
