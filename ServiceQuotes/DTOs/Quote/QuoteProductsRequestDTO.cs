@@ -10,9 +10,9 @@ public class QuoteProductsRequestDTO
     [Required]
     public Guid ProductId { get; set; }
     [Required]
-    [Range(1, 100, ErrorMessage = "Quantidade deve ser maior que zero")]
+    [Range(1, 100, ErrorMessage = "Quantidade deve ser entre 0 e 100")]
     public int Quantity { get; set; }
     [Required]
-    [Range(1, 1000000, ErrorMessage = "Preço deve ser maior que zero")]
+    [Range(1, 10000, ErrorMessage = "Preço deve ser entre 0 e 10.000")]
     public decimal Price { get; set; }
 }
