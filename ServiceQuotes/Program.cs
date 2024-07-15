@@ -60,6 +60,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IQuotesRepository, QuotesRepository>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IS3BucketService, S3BucketService>();
 
 builder.Services.AddAutoMapper(typeof(CustomerDTOMappingProfile));
 builder.Services.AddAutoMapper(typeof(ProductDTOMappingProfile));
