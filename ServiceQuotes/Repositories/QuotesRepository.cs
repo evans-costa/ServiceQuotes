@@ -28,10 +28,12 @@ public class QuotesRepository : Repository<Quote>, IQuotesRepository
     {
         var detailedQuote = await _context.Quotes
             .Include(q => q.Customer)
+                .Where(c => c.QuoteId == id)
             .Include(q => q.Products)
             .ThenInclude(p => p.QuoteProducts
                 .Where(qp => qp.QuoteId == id)
             )
+            .AsSplitQuery()
             .FirstOrDefaultAsync(q => q.QuoteId == id);
 
         return detailedQuote;
