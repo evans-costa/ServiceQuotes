@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceQuotes", "src\ServiceQuotes.csproj", "{CD975928-68CD-4AAE-A71A-455A66A87BAB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8009E562-5228-4BA3-A608-1403793F04FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceQuotes.API", "src\ServiceQuotes.API\ServiceQuotes.API.csproj", "{CD975928-68CD-4AAE-A71A-455A66A87BAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,6 +20,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CD975928-68CD-4AAE-A71A-455A66A87BAB} = {8009E562-5228-4BA3-A608-1403793F04FC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0DE904D3-2607-4570-9256-3EB73BFC890F}
