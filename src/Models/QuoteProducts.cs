@@ -10,10 +10,11 @@ public class QuoteProducts
     public int QuoteId { get; set; }
 
     [Required]
-    [Range(1, int.MaxValue)]
+    [Range(1, 100)]
     public int Quantity { get; set; }
+
     [Required]
-    [Range(1, double.MaxValue)]
+    [Range(0.01, 10000.00)]
     [Column(TypeName = "decimal(10,2)")]
     public decimal Price { get; set; }
 }

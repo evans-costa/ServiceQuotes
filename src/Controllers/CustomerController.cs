@@ -96,7 +96,7 @@ public class CustomerController : ControllerBase
 
         var customer = _mapper.Map<Customer>(customerDto);
 
-        var createdCustomer = _unitOfWork.CustomerRepository.Create(customer);
+        var createdCustomer = await _unitOfWork.CustomerRepository.CreateAsync(customer);
 
         await _unitOfWork.CommitAsync();
 

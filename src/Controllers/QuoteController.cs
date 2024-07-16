@@ -184,7 +184,7 @@ public class QuoteController : ControllerBase
 
         quote.TotalPrice = quote.QuotesProducts.Sum(p => p.Price * p.Quantity);
 
-        _unitOfWork.QuotesRepository.Create(quote);
+        await _unitOfWork.QuotesRepository.CreateAsync(quote);
 
         await _unitOfWork.CommitAsync();
 

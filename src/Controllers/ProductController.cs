@@ -95,7 +95,7 @@ public class ProductController : ControllerBase
 
         var product = _mapper.Map<Product>(productDto);
 
-        var createdProduct = _unitOfWork.ProductRepository.Create(product);
+        var createdProduct = await _unitOfWork.ProductRepository.CreateAsync(product);
 
         await _unitOfWork.CommitAsync();
 

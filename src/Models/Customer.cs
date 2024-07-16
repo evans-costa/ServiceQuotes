@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace ServiceQuotes.Models;
 
@@ -16,10 +15,9 @@ public class Customer
 
     [Required]
     public string? Name { get; set; }
+    [StringLength(20)]
     public string? Phone { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-
-    [JsonIgnore]
     public ICollection<Quote> Quotes { get; }
 }
