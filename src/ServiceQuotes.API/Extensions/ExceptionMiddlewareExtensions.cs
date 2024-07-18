@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
-using ServiceQuotes.API.Models;
 using System.Net;
 
 namespace ServiceQuotes.API.Extensions;

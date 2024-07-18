@@ -1,15 +1,10 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using ServiceQuotes.API.DTOs.Product;
-using ServiceQuotes.API.Exceptions;
-using ServiceQuotes.API.Models;
-using ServiceQuotes.API.Pagination;
-using ServiceQuotes.API.Repositories.Interfaces;
-using ServiceQuotes.API.Resources;
+using ServiceQuotes.Application.DTO.Product;
+using ServiceQuotes.Application.Interfaces;
+using ServiceQuotes.Domain.Pagination;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Net.Mime;
-using X.PagedList;
 
 namespace ServiceQuotes.API.Controllers;
 
@@ -18,92 +13,57 @@ namespace ServiceQuotes.API.Controllers;
 [ApiController]
 public class ProductController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly IProductService _productService;
     private readonly ILogger<ProductController> _logger;
 
-    public ProductController(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ProductController> logger)
+    public ProductController(IProductService productService, ILogger<ProductController> logger)
     {
-        _mapper = mapper;
-        _unitOfWork = unitOfWork;
+        _productService = productService;
         _logger = logger;
-    }
-
-    private ActionResult<IEnumerable<ProductResponseDTO>> GetProducts(IPagedList<Product> product)
-    {
-        var metadata = new
-        {
-            product.Count,
-            product.PageNumber,
-            product.PageSize,
-            product.TotalItemCount,
-            product.HasNextPage,
-            product.HasPreviousPage,
-        };
-
-        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
-
-        var productDto = _mapper.Map<IEnumerable<ProductResponseDTO>>(product);
-
-        return Ok(productDto);
-    }
-
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetAllProducts([FromQuery] QueryParameters productParams)
-    {
-        _logger.LogInformation("### Get all products: GET api/product ###");
-
-        var products = await _unitOfWork.ProductRepository.GetProductsAsync(productParams);
-
-        if (products is null || products.IsNullOrEmpty())
-            throw new NotFoundException(ExceptionMessages.PRODUCT_NOT_FOUND);
-
-        return GetProducts(products);
-    }
-
-    [HttpGet("{id:guid}", Name = "GetProductById")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ProductResponseDTO>> GetProductById(Guid id)
-    {
-        _logger.LogInformation("### Get a product by ID: GET api/product/{id} ###", id);
-
-        var product = await _unitOfWork.ProductRepository.GetAsync(p => p.ProductId == id);
-
-        if (product is null)
-            throw new NotFoundException(ExceptionMessages.PRODUCT_NOT_FOUND);
-
-        var productDto = _mapper.Map<ProductResponseDTO>(product);
-
-        return Ok(productDto);
     }
 
     [HttpPost]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [SwaggerOperation(Summary = "Criar um produto")]
     public async Task<ActionResult<ProductResponseDTO>> CreateProduct(ProductRequestDTO productDto)
     {
         _logger.LogInformation("### Create a product: POST api/product ###");
 
-        if (productDto is null)
-        {
-            return BadRequest();
-        }
-
-        var product = _mapper.Map<Product>(productDto);
-
-        var createdProduct = await _unitOfWork.ProductRepository.CreateAsync(product);
-
-        await _unitOfWork.CommitAsync();
-
-        var newProduct = _mapper.Map<ProductResponseDTO>(createdProduct);
+        var newProduct = await _productService.CreateProduct(productDto);
 
         return new CreatedAtRouteResult("GetProductById", new
         {
-            id = newProduct.ProductId
+            id = newProduct.ProductId,
         }, newProduct);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [SwaggerOperation(Summary = "Buscar todas os produtos")]
+    public async Task<ActionResult<IEnumerable<ProductResponseDTO>>> GetAllProducts([FromQuery] QueryParameters productParams)
+    {
+        _logger.LogInformation("### Get all products: GET api/product ###");
+
+        var (products, metadata) = await _productService.GetAllProducts(productParams);
+
+        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+        return Ok(products);
+    }
+
+    [HttpGet("{id:guid}", Name = "GetProductById")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [SwaggerOperation(Summary = "Buscar um produto por ID")]
+    public async Task<ActionResult<ProductResponseDTO>> GetProductById(Guid id)
+    {
+        _logger.LogInformation("### Get a product by ID: GET api/product/{id} ###", id);
+
+        var product = await _productService.GetProductById(id);
+
+        return Ok(product);
     }
 }

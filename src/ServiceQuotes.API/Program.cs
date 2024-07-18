@@ -1,24 +1,15 @@
 using Asp.Versioning;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
-using ServiceQuotes.API.Context;
 using ServiceQuotes.API.Extensions;
 using ServiceQuotes.API.Filters;
-using ServiceQuotes.API.Logging;
-using ServiceQuotes.API.Mappings;
-using ServiceQuotes.API.Repositories;
-using ServiceQuotes.API.Repositories.Interfaces;
-using ServiceQuotes.API.Services;
+using ServiceQuotes.CrossCutting.IoC;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration
-{
-    LogLevel = LogLevel.Information,
-}));
+builder.Logging.AddCustomLogger();
 
 // Add services to the container.
 builder.Services.AddControllers(options =>
@@ -27,17 +18,28 @@ builder.Services.AddControllers(options =>
 
 }).AddJsonOptions(options =>
 {
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-var sqlServerConnection = builder.Configuration["ConnectionStrings:DefaultConnection"];
-
-builder.Services.AddDbContext<ServiceQuoteApiContext>(options =>
+builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
+builder.Services.ConfigureSwaggerGen(setup =>
 {
-    options.UseSqlServer(sqlServerConnection);
+    setup.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Service Quote API",
+        Description = "API ASP.NET Core do projeto Service Quotes",
+        Version = "v1",
+        Contact = new OpenApiContact
+        {
+            Name = "Evando Costa",
+            Url = new Uri("https://evandrocosta.dev.br")
+        }
+    });
 });
 
 builder.Services.AddApiVersioning(options =>
@@ -54,24 +56,13 @@ builder.Services.AddApiVersioning(options =>
 
 QuestPDF.Settings.License = LicenseType.Community;
 
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IQuotesRepository, QuotesRepository>();
-builder.Services.AddScoped<IInvoiceService, InvoiceService>();
-builder.Services.AddScoped<IS3BucketService, S3BucketService>();
-
-builder.Services.AddAutoMapper(typeof(CustomerDTOMappingProfile));
-builder.Services.AddAutoMapper(typeof(ProductDTOMappingProfile));
-builder.Services.AddAutoMapper(typeof(QuoteDTOMappingProfile));
-
 var app = builder.Build();
+
+app.UseSwagger();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
     app.UseSwaggerUI();
 }
 

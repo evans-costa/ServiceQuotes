@@ -1,16 +1,10 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using ServiceQuotes.API.DTOs.Quote;
-using ServiceQuotes.API.Exceptions;
-using ServiceQuotes.API.Models;
-using ServiceQuotes.API.Pagination;
-using ServiceQuotes.API.Repositories.Interfaces;
-using ServiceQuotes.API.Resources;
-using ServiceQuotes.API.Services;
+using ServiceQuotes.Application.DTO.Quote;
+using ServiceQuotes.Application.Interfaces;
+using ServiceQuotes.Domain.Pagination;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Net.Mime;
-using X.PagedList;
 
 namespace ServiceQuotes.API.Controllers;
 
@@ -19,116 +13,39 @@ namespace ServiceQuotes.API.Controllers;
 [ApiController]
 public class QuoteController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly IQuoteService _quoteService;
     private readonly ILogger<QuoteController> _logger;
-    private readonly IInvoiceService _invoiceService;
-    private readonly IS3BucketService _bucketService;
 
-    public QuoteController(IUnitOfWork unitOfWork, IMapper mapper, ILogger<QuoteController> logger, IInvoiceService invoiceService, IS3BucketService bucketService)
+    public QuoteController(IQuoteService quoteService, ILogger<QuoteController> logger)
     {
-        _unitOfWork = unitOfWork;
-        _invoiceService = invoiceService;
+        _quoteService = quoteService;
         _logger = logger;
-        _mapper = mapper;
-        _bucketService = bucketService;
-    }
-
-    private ActionResult<IEnumerable<QuoteResponseDTO>> GetQuotes(IPagedList<Quote> quotes)
-    {
-        var metadata = new
-        {
-            quotes.Count,
-            quotes.PageSize,
-            quotes.PageCount,
-            quotes.TotalItemCount,
-            quotes.HasNextPage,
-            quotes.HasPreviousPage,
-        };
-
-        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
-
-        var quoteDto = _mapper.Map<IEnumerable<QuoteResponseDTO>>(quotes);
-
-        return Ok(quoteDto);
-    }
-
-    private async Task<QuoteDetailedResponseDTO?> GetDetailedQuoteDtoAsync(int id)
-    {
-        var quote = await _unitOfWork.QuotesRepository.GetDetailedQuoteAsync(id);
-
-        if (quote is not null)
-        {
-            var quoteDetailedDto = _mapper.Map<QuoteDetailedResponseDTO>(quote);
-
-            return quoteDetailedDto;
-        }
-
-        return null;
-    }
-
-    private async Task<string> UploadInvoiceDocument(QuoteDetailedResponseDTO quote)
-    {
-        var invoiceDocument = _invoiceService.GenerateInvoiceDocument(quote);
-
-        var fileName = $"invoice_{quote.CreatedAt:yyyyMMddTHHmmss}_{quote.QuoteId:d8}.pdf";
-
-        var fileUrl = await _bucketService.UploadFileToS3(invoiceDocument, fileName);
-
-        return fileUrl;
-    }
-
-    private async Task<string> GenerateInvoiceUrl(int id)
-    {
-        var quote = await GetDetailedQuoteDtoAsync(id);
-
-        if (quote is null)
-            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
-
-        var generateInvoiceUrl = await UploadInvoiceDocument(quote);
-
-        return generateInvoiceUrl;
-    }
-
-    private async Task SaveInvoiceOnQuote(int id)
-    {
-        var updatedQuote = await _unitOfWork.QuotesRepository.GetAsync(q => q.QuoteId == id);
-
-        if (updatedQuote is null)
-            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
-
-        updatedQuote.FileUrl = await GenerateInvoiceUrl(id);
-
-        _unitOfWork.QuotesRepository.Update(updatedQuote);
-        await _unitOfWork.CommitAsync();
     }
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [SwaggerOperation(Summary = "Buscar todas as cotações paginadas")]
     public async Task<ActionResult<IEnumerable<QuoteResponseDTO>>> GetAllQuotes([FromQuery] QueryParameters quoteParams)
     {
         _logger.LogInformation("### Get all quotes: GET api/qutoe/ ###");
 
-        var quotes = await _unitOfWork.QuotesRepository.GetQuotesAsync(quoteParams);
+        var (quotes, metadata) = await _quoteService.GetAllQuotes(quoteParams);
 
-        if (quotes is null)
-            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
+        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
 
-        return GetQuotes(quotes);
+        return Ok(quotes);
     }
 
     [HttpGet("{id:int}", Name = "GetQuoteDetailsById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [SwaggerOperation(Summary = "Buscar os detalhes da cotação por ID")]
     public async Task<ActionResult<QuoteDetailedResponseDTO>> GetQuoteDetailsById(int id)
     {
         _logger.LogInformation("### Get a detailed quote by ID: GET api/quote/{id} ###", id);
 
-        var quote = await GetDetailedQuoteDtoAsync(id);
-
-        if (quote is null)
-            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
+        var quote = await _quoteService.GetQuoteDetailsById(id);
 
         return Ok(quote);
     }
@@ -136,16 +53,16 @@ public class QuoteController : ControllerBase
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [SwaggerOperation(Summary = "Buscar cotações por filtro")]
     public async Task<ActionResult<IEnumerable<QuoteResponseDTO>>> GetQuoteBySearch([FromQuery] QuoteFilterParams quoteParams)
     {
         _logger.LogInformation("### Get a quote by search criteria: GET api/quote/search/{quoteParams} ###", quoteParams);
 
-        var quotes = await _unitOfWork.QuotesRepository.SearchQuotesAsync(quoteParams);
+        var (quotes, metadata) = await _quoteService.GetQuoteBySearch(quoteParams);
 
-        if (quotes is null || quotes.IsNullOrEmpty())
-            throw new NotFoundException(ExceptionMessages.QUOTE_SEARCH_NOT_FOUND);
+        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
 
-        return GetQuotes(quotes);
+        return Ok(quotes);
     }
 
     [HttpPost]
@@ -154,43 +71,13 @@ public class QuoteController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [SwaggerOperation(Summary = "Criar uma cotação")]
     public async Task<ActionResult<QuoteResponseDTO>> CreateQuote
         ([FromBody] QuoteWithProductRequestDTO quoteWithProductsDto)
     {
         _logger.LogInformation("### Create a quote: POST api/quote");
 
-        if (quoteWithProductsDto is null || quoteWithProductsDto is { Products: null } or { Quote: null })
-            return BadRequest();
-
-        var quote = _mapper.Map<Quote>(quoteWithProductsDto.Quote);
-
-        foreach (var product in quoteWithProductsDto.Products)
-        {
-            var productExists = await _unitOfWork.ProductRepository.GetAsync(e => e.ProductId == product.ProductId);
-
-            if (productExists is null)
-                throw new NotFoundException(ExceptionMessages.PRODUCT_NOT_FOUND);
-
-            if (quote.QuotesProducts.Any(qp => qp.ProductId == product.ProductId))
-            {
-                _logger.LogWarning("Product {product} already in this quote", productExists.Name);
-                return Conflict("Produto duplicado no orçamento.");
-            }
-
-            var quoteProduct = _mapper.Map<QuoteProducts>(product);
-
-            quote.QuotesProducts.Add(quoteProduct);
-        }
-
-        quote.TotalPrice = quote.QuotesProducts.Sum(p => p.Price * p.Quantity);
-
-        await _unitOfWork.QuotesRepository.CreateAsync(quote);
-
-        await _unitOfWork.CommitAsync();
-
-        await SaveInvoiceOnQuote(quote.QuoteId);
-
-        var newQuoteDto = _mapper.Map<QuoteResponseDTO>(quote);
+        var newQuoteDto = await _quoteService.CreateQuote(quoteWithProductsDto);
 
         return new CreatedAtRouteResult("GetQuoteDetailsById", new { id = newQuoteDto.QuoteId }, newQuoteDto);
     }
