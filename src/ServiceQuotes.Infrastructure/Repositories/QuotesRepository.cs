@@ -31,6 +31,7 @@ public class QuotesRepository : Repository<Quote>, IQuotesRepository
                 .Where(qp => qp.QuoteId == id)
             )
             .AsSplitQuery()
+            .AsNoTracking()
             .FirstOrDefaultAsync(q => q.QuoteId == id);
 
         return detailedQuote;
