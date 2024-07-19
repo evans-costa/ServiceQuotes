@@ -24,7 +24,7 @@ public static class DependencyInjection
         }
         else
         {
-            sqlServerConnection = Environment.GetEnvironmentVariable("SQL_SERVER_AZURE_DB");
+            sqlServerConnection = configuration["ConnectionStrings:AzureConnection"];
         }
 
         services.AddDbContext<ServiceQuoteApiContext>(options =>
