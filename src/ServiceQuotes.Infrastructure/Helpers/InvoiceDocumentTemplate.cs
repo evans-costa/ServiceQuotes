@@ -2,16 +2,19 @@
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using ServiceQuotes.Application.DTO.Invoice;
+using System.Globalization;
 
 namespace ServiceQuotes.Infrastructure.Helpers;
 
 public class InvoiceDocumentTemplate : IDocument
 {
     public InvoiceDTO Model { get; }
+    private readonly CultureInfo _culture;
 
-    public InvoiceDocumentTemplate(InvoiceDTO model)
+    public InvoiceDocumentTemplate(InvoiceDTO model, CultureInfo culture)
     {
         Model = model;
+        _culture = culture;
     }
 
     public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
@@ -43,7 +46,7 @@ public class InvoiceDocumentTemplate : IDocument
                 column.Item().Text(text =>
                 {
                     text.Span("Data do orçamento: ").SemiBold();
-                    text.Span($"{Model.CreatedAt:d}");
+                    text.Span($"{Model.CreatedAt.ToString("d", _culture)}");
                 });
             });
 
@@ -63,7 +66,7 @@ public class InvoiceDocumentTemplate : IDocument
                 column.Item().Element(ComposeTable);
 
                 var totalPrice = Model.Items?.Sum(x => x.Price * x.Quantity);
-                column.Item().AlignRight().Text($"Total do orçamento: {totalPrice:C2}").FontSize(14);
+                column.Item().AlignRight().Text($"Total do orçamento: {totalPrice!.Value.ToString("C2", _culture.NumberFormat)}").FontSize(14);
 
                 column.Item().PaddingTop(25).Element(ComposeComments);
             });
@@ -126,9 +129,9 @@ public class InvoiceDocumentTemplate : IDocument
             {
                 table.Cell().Element(CellStyle).Text($"{Model.Items.IndexOf(item) + 1}");
                 table.Cell().Element(CellStyle).Text(item.Name);
-                table.Cell().Element(CellStyle).AlignRight().Text($"{item.Price:C2}");
+                table.Cell().Element(CellStyle).AlignRight().Text($"{item.Price.ToString("C2", _culture.NumberFormat)}");
                 table.Cell().Element(CellStyle).AlignRight().Text($"{item.Quantity}");
-                table.Cell().Element(CellStyle).AlignRight().Text($"{item.Price * item.Quantity:C2}");
+                table.Cell().Element(CellStyle).AlignRight().Text($"{(item.Price * item.Quantity)!.Value.ToString("C2", _culture.NumberFormat)}");
 
                 static IContainer CellStyle(IContainer container)
                 {
@@ -144,7 +147,7 @@ public class InvoiceDocumentTemplate : IDocument
         {
             column.Spacing(5);
             column.Item().Text("Observações:").FontSize(14);
-            column.Item().Text("Esse orçamento é apenas demonstrativo, baseado nos preços procurados na data do documento descrit acima em sites de e-commerce e / ou fornecedores próprios. Sinta-se a vontade para procurar o(s) produto(s) descrito(s) nessa lista em outros lugares a sua escolha.");
+            column.Item().Text("Esse orçamento é apenas demonstrativo, baseado nos preços procurados na data do documento descritogit s acima em sites de e-commerce e / ou fornecedores próprios. Sinta-se a vontade para procurar o(s) produto(s) descrito(s) nessa lista em outros lugares a sua escolha.");
         });
     }
 

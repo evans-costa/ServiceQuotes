@@ -3,6 +3,7 @@ using ServiceQuotes.Application.DTO.Invoice;
 using ServiceQuotes.Application.DTO.Quote;
 using ServiceQuotes.Application.Interfaces;
 using ServiceQuotes.Infrastructure.Helpers;
+using System.Globalization;
 
 namespace ServiceQuotes.Infrastructure.Services;
 
@@ -29,7 +30,9 @@ public class InvoiceService : IInvoiceService
             }).ToList()
         };
 
-        var document = new InvoiceDocumentTemplate(invoice);
+        var culture = CultureInfo.CreateSpecificCulture("pt-BR");
+        var document = new InvoiceDocumentTemplate(invoice, culture);
+
         return document.GeneratePdf();
     }
 }
