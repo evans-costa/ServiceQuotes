@@ -29,6 +29,11 @@ public class QuoteService : IQuoteService
         if (quoteWithProductsDto is null || quoteWithProductsDto is { Products: null } or { Quote: null })
             throw new BadRequestException(ExceptionMessages.EMPTY_FIELDS);
 
+        var customerExists = await _unitOfWork.CustomerRepository.GetAsync(c => c.CustomerId == quoteWithProductsDto.Quote.CustomerId);
+
+        if (customerExists is null)
+            throw new NotFoundException(ExceptionMessages.CUSTOMER_NOT_FOUND);
+
         var quote = _mapper.Map<Quote>(quoteWithProductsDto.Quote);
 
         foreach (var product in quoteWithProductsDto.Products)
