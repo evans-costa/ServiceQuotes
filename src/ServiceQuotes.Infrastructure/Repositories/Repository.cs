@@ -20,7 +20,7 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task<T?> GetAsync(Expression<Func<T, bool>> predicate)
     {
-        return await _context.Set<T>().AsNoTracking().FirstOrDefaultAsync(predicate);
+        return await _context.Set<T>().FirstOrDefaultAsync(predicate);
     }
 
     public async Task<T?> CreateAsync(T entity)
