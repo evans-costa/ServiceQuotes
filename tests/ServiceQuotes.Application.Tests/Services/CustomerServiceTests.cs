@@ -12,7 +12,7 @@ using ServiceQuotes.Domain.Interfaces;
 using ServiceQuotes.Domain.Pagination;
 using X.PagedList.Extensions;
 
-namespace ServiceQuotes.Application.Tests;
+namespace ServiceQuotes.Application.Tests.Services;
 
 public class CustomerServicesTests
 {
@@ -39,6 +39,39 @@ public class CustomerServicesTests
         mockUnitOfWork.Verify(u => u.CommitAsync(), Times.Once());
     }
 
+    [Theory]
+    [AutoDomainData]
+    public async Task GetAllCustomer_ShouldReturnCustomersPaginated(
+    [Frozen] Mock<IUnitOfWork> mockUnitOfWork,
+    [Frozen] Mock<IMapper> mockMapper,
+    QueryParameters customerParams,
+    CustomerService sut,
+    List<Customer> customerEntities,
+    List<CustomerResponseDTO> expectedResponse
+    )
+    {
+        //Arrange
+        mockUnitOfWork.Setup(u => u.CustomerRepository.GetCustomersAsync()).ReturnsAsync(customerEntities);
+        var customerPaginated = customerEntities.ToPagedList(customerParams.PageNumber, customerParams.PageSize);
+        mockMapper.Setup(m => m.Map<IEnumerable<CustomerResponseDTO>>(customerPaginated)).Returns(expectedResponse);
+
+        //Act
+        var (result, metadata) = await sut.GetAllCustomers(customerParams);
+
+        //Assert
+        result.Should().BeEquivalentTo(expectedResponse);
+        metadata.Should().BeEquivalentTo(new
+        {
+            customerPaginated.PageNumber,
+            customerPaginated.PageSize,
+            customerPaginated.PageCount,
+            customerPaginated.TotalItemCount,
+            customerPaginated.HasNextPage,
+            customerPaginated.HasPreviousPage,
+        });
+
+        mockUnitOfWork.Verify(u => u.CustomerRepository.GetCustomersAsync(), Times.Once());
+    }
 
     [Theory]
     [AutoDomainData]
@@ -77,39 +110,5 @@ public class CustomerServicesTests
 
         await act.Should().ThrowAsync<NotFoundException>().WithMessage(ExceptionMessages.CUSTOMER_NOT_FOUND);
         mockUnitOfWork.Verify(u => u.CustomerRepository.GetAsync(c => c.CustomerId == customerId), Times.Once());
-    }
-
-    [Theory]
-    [AutoDomainData]
-    public async Task GetAllCustomer_ShouldReturnCustomersPaginated(
-        [Frozen] Mock<IUnitOfWork> mockUnitOfWork,
-        [Frozen] Mock<IMapper> mockMapper,
-        QueryParameters customerParams,
-        CustomerService sut,
-        List<Customer> customerEntities,
-        List<CustomerResponseDTO> expectedResponse
-        )
-    {
-        //Arrange
-        mockUnitOfWork.Setup(u => u.CustomerRepository.GetCustomersAsync()).ReturnsAsync(customerEntities);
-        var customerPaginated = customerEntities.ToPagedList(customerParams.PageNumber, customerParams.PageSize);
-        mockMapper.Setup(m => m.Map<IEnumerable<CustomerResponseDTO>>(customerPaginated)).Returns(expectedResponse);
-
-        //Act
-        var (result, metadata) = await sut.GetAllCustomers(customerParams);
-
-        //Assert
-        result.Should().BeEquivalentTo(expectedResponse);
-        metadata.Should().BeEquivalentTo(new
-        {
-            customerPaginated.PageNumber,
-            customerPaginated.PageSize,
-            customerPaginated.PageCount,
-            customerPaginated.TotalItemCount,
-            customerPaginated.HasNextPage,
-            customerPaginated.HasPreviousPage,
-        });
-
-        mockUnitOfWork.Verify(u => u.CustomerRepository.GetCustomersAsync(), Times.Once());
     }
 }
