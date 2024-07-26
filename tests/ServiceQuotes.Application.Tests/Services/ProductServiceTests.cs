@@ -27,7 +27,6 @@ public class ProductServiceTests
         ProductService sut
         )
     {
-
         // Arrange
         mockMapper.Setup(m => m.Map<Product>(productDto)).Returns(productEntity);
         mockUnitOfWork.Setup(u => u.ProductRepository.CreateAsync(productEntity)).ReturnsAsync(createdProduct);
@@ -36,7 +35,7 @@ public class ProductServiceTests
         //Act
         var result = await sut.CreateProduct(productDto);
 
-        //Arrange
+        //Assert
         result.Should().Be(expectedResponse);
         mockUnitOfWork.Verify(u => u.ProductRepository.CreateAsync(productEntity), Times.Once());
         mockUnitOfWork.Verify(u => u.CommitAsync(), Times.Once());
@@ -85,11 +84,14 @@ public class ProductServiceTests
         ProductResponseDTO expectedResponse,
         ProductService sut)
     {
+        // Arrange
         mockUnitOfWork.Setup(u => u.ProductRepository.GetAsync(p => p.ProductId == productId)).ReturnsAsync(productEntity);
         mockMapper.Setup(m => m.Map<ProductResponseDTO>(productEntity)).Returns(expectedResponse);
 
+        // Act
         var result = await sut.GetProductById(productId);
 
+        // Assert
         result.Should().Be(expectedResponse);
         mockUnitOfWork.Verify(u => u.ProductRepository.GetAsync(p => p.ProductId == productId), Times.Once());
     }
@@ -101,10 +103,13 @@ public class ProductServiceTests
         Guid productId,
         ProductService sut)
     {
+        // Arrange
         mockUnitOfWork.Setup(u => u.ProductRepository.GetAsync(p => p.ProductId == productId)).ReturnsAsync((Product?) null);
 
+        // Act
         Func<Task> act = async () => await sut.GetProductById(productId);
 
+        // Assert
         await act.Should().ThrowAsync<NotFoundException>().WithMessage(ExceptionMessages.PRODUCT_NOT_FOUND);
         mockUnitOfWork.Verify(u => u.ProductRepository.GetAsync(p => p.ProductId == productId), Times.Once());
     }

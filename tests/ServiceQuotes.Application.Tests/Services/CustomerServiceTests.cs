@@ -28,12 +28,15 @@ public class CustomerServicesTests
         CustomerService sut
         )
     {
+        // Arrange
         mockMapper.Setup(m => m.Map<Customer>(customerDto)).Returns(customerEntity);
         mockUnitOfWork.Setup(u => u.CustomerRepository.CreateAsync(customerEntity)).ReturnsAsync(createdCustomer);
         mockMapper.Setup(m => m.Map<CustomerResponseDTO>(createdCustomer)).Returns(expectedResponse);
 
+        // Act
         var result = await sut.CreateCustomer(customerDto);
 
+        // Assert
         result.Should().Be(expectedResponse);
         mockUnitOfWork.Verify(u => u.CustomerRepository.CreateAsync(customerEntity), Times.Once());
         mockUnitOfWork.Verify(u => u.CommitAsync(), Times.Once());
@@ -104,10 +107,13 @@ public class CustomerServicesTests
         Guid customerId
         )
     {
+        // Arrange
         mockUnitOfWork.Setup(u => u.CustomerRepository.GetAsync(c => c.CustomerId == customerId)).ReturnsAsync((Customer?) null);
 
+        // Act
         Func<Task> act = async () => await sut.GetCustomerById(customerId);
 
+        // Assert
         await act.Should().ThrowAsync<NotFoundException>().WithMessage(ExceptionMessages.CUSTOMER_NOT_FOUND);
         mockUnitOfWork.Verify(u => u.CustomerRepository.GetAsync(c => c.CustomerId == customerId), Times.Once());
     }
