@@ -8,7 +8,6 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddConsole();
 builder.Logging.AddCustomLogger();
 
 // Add services to the container.
