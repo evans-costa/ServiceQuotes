@@ -21,7 +21,7 @@
   <a href="#instalação">Instalação</a> •
   <a href="#configuração">Configuração</a> •
   <a href="#estrutura-do-projeto">Estrutura do Projeto</a> •
-  <a href="#créditos">Créditos</a> •
+  <a href="#todo--melhorias">TODO / Melhorias</a> •
   <a href="#licença">Licença</a>
 </p>
 
@@ -124,13 +124,14 @@ Meu grande objetivo com esse projeto foi criar algo que "tocasse" o mundo real e
 
   Isso irá abrir a interface do Swagger no seu navegador, onde você poderá consultar e testar os endpoints da aplicação, bem como ver os DTO's usados e os exemplos de requisição e resposta. Como alternativa, você pode testar usando seu cliente API REST favorito como o [Insomnia](https://insomnia.rest/download) ou [Postman](https://www.postman.com/).
 
-## Estrutra do projeto
+## Estrutura do projeto
 
 ### Diagrama UML
+![uml-diagram](https://github.com/user-attachments/assets/db1fda11-f831-42b6-8ed9-16db808e503f)
 
 ### Diagrama Banco de Dados
+![db-diagram](https://github.com/user-attachments/assets/530ce4ee-f06e-4532-bf33-aa7b7386e85f)
 
-  
 ## TODO / Melhorias
 
 ### Funcionalidades
