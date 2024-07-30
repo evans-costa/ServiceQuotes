@@ -88,7 +88,7 @@ public class QuoteService : IQuoteService
     {
         var quotesEntities = await _unitOfWork.QuotesRepository.SearchQuotesAsync(quoteFilterParams);
 
-        if (quotesEntities is null)
+        if (quotesEntities is null || !quotesEntities.Any())
             throw new NotFoundException(ExceptionMessages.QUOTE_SEARCH_NOT_FOUND);
 
         var quotesPaginated = quotesEntities.ToPagedList(quoteFilterParams.PageNumber, quoteFilterParams.PageSize);
@@ -128,6 +128,7 @@ public class QuoteService : IQuoteService
         var quoteProduct = _mapper.Map<QuoteProducts>(productDto);
         quote.QuotesProducts.Add(quoteProduct);
     }
+
     private async Task<Customer> EnsureCustomerExists(Guid customerId)
     {
         var customer = await _unitOfWork.CustomerRepository.GetAsync(c => c.CustomerId == customerId);
