@@ -152,6 +152,24 @@ public class QuotesServiceTests
 
     [Theory]
     [AutoDomainData]
+    public async Task GetQuotesBySearch_ShouldReturnNotFoundException_WhenQuoteNotExists(
+    [Frozen] Mock<IUnitOfWork> mockUnitOfWork, QuoteFilterParams quoteParams,
+    QuoteService sut)
+    {
+        // Arrange
+        mockUnitOfWork.Setup(u => u.QuotesRepository.SearchQuotesAsync(quoteParams)).ReturnsAsync(Enumerable.Empty<Quote>());
+
+        // Act
+        Func<Task> act = async () => await sut.GetQuoteBySearch(quoteParams);
+
+        // Assert
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage(ExceptionMessages.QUOTE_SEARCH_NOT_FOUND);
+
+        mockUnitOfWork.Verify(u => u.QuotesRepository.SearchQuotesAsync(quoteParams), Times.Once());
+    }
+
+    [Theory]
+    [AutoDomainData]
     public async Task GetQuoteById_ShouldReturnDetailedQuote_WhenQuoteExists(
         [Frozen] Mock<IUnitOfWork> mockUnitOfWork,
         [Frozen] Mock<IMapper> mockMapper,
@@ -169,6 +187,24 @@ public class QuotesServiceTests
 
         // Assert
         result.Should().Be(expectedResult);
+        mockUnitOfWork.Verify(u => u.QuotesRepository.GetDetailedQuoteAsync(quoteId), Times.Once());
+    }
+
+    [Theory]
+    [AutoDomainData]
+    public async Task GetQuoteById_ShouldThrowANotFoundException_WhenIdNotExists(
+    [Frozen] Mock<IUnitOfWork> mockUnitOfWork,
+    int quoteId,
+    QuoteService sut)
+    {
+        // Arrange
+        mockUnitOfWork.Setup(u => u.QuotesRepository.GetDetailedQuoteAsync(quoteId)).ReturnsAsync((Quote?) null);
+
+        // Act
+        Func<Task> act = async () => await sut.GetQuoteDetailsById(quoteId);
+
+        // Assert
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage(ExceptionMessages.QUOTE_NOT_FOUND);
         mockUnitOfWork.Verify(u => u.QuotesRepository.GetDetailedQuoteAsync(quoteId), Times.Once());
     }
 
