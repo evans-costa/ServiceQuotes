@@ -1,8 +1,9 @@
-﻿using ServiceQuotes.Application.DTO.Quote;
+﻿using ServiceQuotes.Domain.Entities;
 
 namespace ServiceQuotes.Application.Interfaces;
 
 public interface IInvoiceService
 {
-    byte[] GenerateInvoiceDocument(QuoteDetailedResponseDTO quote);
+    byte[] GenerateInvoiceDocument(Quote quote);
+    Task<string> GenerateInvoiceUrl(Quote quote);
 }

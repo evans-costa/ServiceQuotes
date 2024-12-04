@@ -32,18 +32,11 @@ public class CustomLogger : ILogger
 
     private void GenerateLogFile(string message)
     {
-        var logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
-        var filePath = Path.Combine(logDirectory, $"{DateTime.Now.ToString("yyyy-MM-dd")}.log");
-        try
-        {
-            Directory.CreateDirectory(logDirectory);
+        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Logs", $"{DateTime.Now:yyyy-MM-dd}.log");
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
 
-            using StreamWriter sw = new StreamWriter(filePath, true);
-            sw.WriteLine(message);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+        using FileStream fs = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+        using StreamWriter sw = new StreamWriter(fs);
+        sw.WriteLine(message);
     }
 }

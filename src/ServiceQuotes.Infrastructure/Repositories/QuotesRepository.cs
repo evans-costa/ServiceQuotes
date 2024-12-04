@@ -14,11 +14,12 @@ public class QuotesRepository : Repository<Quote>, IQuotesRepository
 
     public async Task<IEnumerable<Quote>> GetQuotesAsync()
     {
-        var quotes = await GetAllAsync();
+        var quotes = await _context.Quotes
+            .Include(q => q.Customer)
+            .OrderBy(q => q.QuoteId)
+            .ToListAsync();
 
-        var orderedQuotes = quotes.OrderBy(q => q.QuoteId).AsQueryable();
-
-        return orderedQuotes;
+        return quotes;
     }
 
     public async Task<Quote?> GetDetailedQuoteAsync(int id)
@@ -30,8 +31,8 @@ public class QuotesRepository : Repository<Quote>, IQuotesRepository
             .ThenInclude(p => p.QuoteProducts
                 .Where(qp => qp.QuoteId == id)
             )
-            .AsSplitQuery()
             .AsNoTracking()
+            .AsSplitQuery()
             .FirstOrDefaultAsync(q => q.QuoteId == id);
 
         return detailedQuote;
@@ -57,28 +58,33 @@ public class QuotesRepository : Repository<Quote>, IQuotesRepository
             };
         }
 
-        var filteredQuotes = quotes.AsQueryable();
-
-        return filteredQuotes;
+        return quotes.Any() ? quotes.AsQueryable() : [];
     }
 
     private static IEnumerable<Quote> GetQuoteByDateAsync(QuoteFilterParams quoteParams, IEnumerable<Quote> quotes)
     {
-        if (DateTime.TryParse(quoteParams.CreatedDate, out DateTime createdDate))
+        if (!string.IsNullOrEmpty(quoteParams.CreatedDate))
         {
-            quotes = quotes.Where(q => q.CreatedAt.Date == createdDate.Date).OrderBy(q => q.CreatedAt);
+            if (DateTime.TryParse(quoteParams.CreatedDate, out DateTime createdDate))
+            {
+                var filteredQuotes = quotes.Where(q => q.CreatedAt.Date == createdDate.Date).OrderBy(q => q.CreatedAt);
+
+                return filteredQuotes;
+            }
         }
 
-        return quotes;
+        return [];
     }
 
     private static IEnumerable<Quote> GetQuoteByCustomerName(QuoteFilterParams quoteParams, IEnumerable<Quote> quotes)
     {
         if (!string.IsNullOrEmpty(quoteParams.CustomerName))
         {
-            quotes = quotes.Where(q => q.Customer!.Name!.Contains(quoteParams.CustomerName, StringComparison.CurrentCultureIgnoreCase)).OrderBy(q => q.CreatedAt);
+            var filteredQuotes = quotes.Where(q => q.Customer!.Name!.Contains(quoteParams.CustomerName, StringComparison.CurrentCultureIgnoreCase)).OrderBy(q => q.CreatedAt);
+
+            return filteredQuotes;
         };
 
-        return quotes;
+        return [];
     }
 }

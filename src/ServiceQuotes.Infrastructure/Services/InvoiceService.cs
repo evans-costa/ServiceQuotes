@@ -1,7 +1,7 @@
 ﻿using QuestPDF.Fluent;
 using ServiceQuotes.Application.DTO.Invoice;
-using ServiceQuotes.Application.DTO.Quote;
 using ServiceQuotes.Application.Interfaces;
+using ServiceQuotes.Domain.Entities;
 using ServiceQuotes.Infrastructure.Helpers;
 using System.Globalization;
 
@@ -9,7 +9,14 @@ namespace ServiceQuotes.Infrastructure.Services;
 
 public class InvoiceService : IInvoiceService
 {
-    public byte[] GenerateInvoiceDocument(QuoteDetailedResponseDTO quote)
+    private readonly IS3BucketService _bucketService;
+
+    public InvoiceService(IS3BucketService bucketService)
+    {
+        _bucketService = bucketService;
+    }
+
+    public byte[] GenerateInvoiceDocument(Quote quote)
     {
         var invoice = new InvoiceDTO
         {
@@ -18,13 +25,13 @@ public class InvoiceService : IInvoiceService
 
             CustomerInfo = new CustomerInfo
             {
-                Name = quote.CustomerInfo?.Name,
-                Phone = quote.CustomerInfo?.Phone
+                Name = quote.Customer?.Name,
+                Phone = quote.Customer?.Phone
             },
 
-            Items = quote.Products?.Select(product => new OrderItem
+            Items = quote.QuotesProducts?.Select(product => new OrderItem
             {
-                Name = product.Name,
+                Name = quote.Products.FirstOrDefault(p => p.ProductId == product.ProductId)?.Name,
                 Price = product.Price,
                 Quantity = product.Quantity,
             }).ToList()
@@ -34,5 +41,16 @@ public class InvoiceService : IInvoiceService
         var document = new InvoiceDocumentTemplate(invoice, culture);
 
         return document.GeneratePdf();
+    }
+
+    public async Task<string> GenerateInvoiceUrl(Quote quote)
+    {
+        var invoiceDocument = GenerateInvoiceDocument(quote);
+
+        var fileName = $"invoice_{quote.CreatedAt:yyyyMMddTHHmmss}_{quote.QuoteId:d8}.pdf";
+
+        var fileUrl = await _bucketService.UploadFileToS3(invoiceDocument, fileName);
+
+        return fileUrl;
     }
 }

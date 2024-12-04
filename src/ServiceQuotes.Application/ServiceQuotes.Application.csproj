@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DTO\Quote\QuoteResumedDTO.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ServiceQuotes.Domain\ServiceQuotes.Domain.csproj" />
   </ItemGroup>
 
