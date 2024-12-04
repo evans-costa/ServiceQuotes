@@ -37,6 +37,7 @@ public static class ExceptionMiddlewareExtensions
                         {
                             StatusCode = context.Response.StatusCode,
                             Message = "Um erro desconhecido ocorreu.",
+                            Trace = context.TraceIdentifier,
                         }.ToString());
                     }
                 };

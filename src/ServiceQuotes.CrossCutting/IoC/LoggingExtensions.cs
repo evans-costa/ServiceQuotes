@@ -7,6 +7,7 @@ public static class LoggingExtensions
     public static ILoggingBuilder AddCustomLogger(this ILoggingBuilder loggingBuilder)
     {
         loggingBuilder.ClearProviders();
+        loggingBuilder.AddConsole();
         loggingBuilder.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration
         {
             LogLevel = LogLevel.Information,
