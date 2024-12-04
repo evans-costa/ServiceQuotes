@@ -35,7 +35,7 @@ public class S3BucketService : IS3BucketService
 
             if (!string.IsNullOrEmpty(profileName))
             {
-                var (ssoCredentials, region) = LoadSsoCredentials(_configuration["AWS:ProfileName"]);
+                var (ssoCredentials, region) = LoadSsoCredentials(profileName);
                 s3Client = new AmazonS3Client(ssoCredentials, region);
                 regionEndpoint = region;
             }

@@ -8,5 +8,5 @@ public interface IQuoteService
     Task<(IEnumerable<QuoteResponseDTO>, object)> GetAllQuotes(QueryParameters quoteParams);
     Task<QuoteDetailedResponseDTO> GetQuoteDetailsById(int id);
     Task<(IEnumerable<QuoteResponseDTO>, object)> GetQuoteBySearch(QuoteFilterParams quoteFilterParams);
-    Task SaveInvoiceOnQuote(int id);
+    Task<string> GenerateInvoiceOnQuote(int id);
 }

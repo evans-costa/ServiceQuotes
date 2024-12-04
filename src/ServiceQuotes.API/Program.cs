@@ -24,6 +24,16 @@ builder.Services.AddControllers(options =>
 
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ServiceQuoteWebAppOrigin", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173");
+        policy.AllowAnyHeader();
+        policy.WithExposedHeaders("X-Pagination");
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
@@ -67,6 +77,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.ConfigureExceptionHandler(app.Environment);
+
+app.UseCors("ServiceQuoteWebAppOrigin");
 
 app.UseHttpsRedirection();
 

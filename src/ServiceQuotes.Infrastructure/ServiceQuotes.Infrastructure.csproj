@@ -9,17 +9,17 @@
   <ItemGroup>
     <ProjectReference Include="..\ServiceQuotes.Application\ServiceQuotes.Application.csproj" />
     <ProjectReference Include="..\ServiceQuotes.Domain\ServiceQuotes.Domain.csproj" />
-    <PackageReference Include="AWSSDK.S3" Version="3.7.310.6" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.300.119" />
-    <PackageReference Include="AWSSDK.SSO" Version="3.7.300.118" />
-    <PackageReference Include="AWSSDK.SSOOIDC" Version="3.7.302.29" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7">
+    <PackageReference Include="AWSSDK.S3" Version="3.7.405.11" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.400.47" />
+    <PackageReference Include="AWSSDK.SSO" Version="3.7.400.47" />
+    <PackageReference Include="AWSSDK.SSOOIDC" Version="3.7.400.47" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.7">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -42,22 +42,24 @@ public class QuoteService : IQuoteService
         quote.TotalPrice = quote.QuotesProducts.Sum(p => p.Price * p.Quantity);
 
         await _unitOfWork.QuotesRepository.CreateAsync(quote);
+
         await _unitOfWork.CommitAsync();
 
         return _mapper.Map<QuoteResponseDTO>(quote);
     }
 
-    public async Task SaveInvoiceOnQuote(int id)
+    public async Task<string> GenerateInvoiceOnQuote(int id)
     {
-        var detailedQuote = await GetQuoteDetailsById(id);
+        var quote = await _unitOfWork.QuotesRepository.GetAsync(q => q.QuoteId == id);
 
-        detailedQuote.FileUrl = await _invoiceService.GenerateInvoiceUrl(detailedQuote);
+        if (quote is null)
+            throw new NotFoundException(ExceptionMessages.QUOTE_NOT_FOUND);
 
-        var updatedQuote = _mapper.Map<Quote>(detailedQuote);
-
-        _unitOfWork.QuotesRepository.Update(updatedQuote);
+        quote.FileUrl = await _invoiceService.GenerateInvoiceUrl(quote);
 
         await _unitOfWork.CommitAsync();
+
+        return quote.FileUrl;
     }
 
     public async Task<(IEnumerable<QuoteResponseDTO>, object)> GetAllQuotes(QueryParameters quoteParams)

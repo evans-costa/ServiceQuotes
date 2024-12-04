@@ -14,11 +14,12 @@ public class QuotesRepository : Repository<Quote>, IQuotesRepository
 
     public async Task<IEnumerable<Quote>> GetQuotesAsync()
     {
-        var quotes = await GetAllAsync();
+        var quotes = await _context.Quotes
+            .Include(q => q.Customer)
+            .OrderBy(q => q.QuoteId)
+            .ToListAsync();
 
-        var orderedQuotes = quotes.OrderBy(q => q.QuoteId).AsQueryable();
-
-        return orderedQuotes;
+        return quotes;
     }
 
     public async Task<Quote?> GetDetailedQuoteAsync(int id)
@@ -30,8 +31,8 @@ public class QuotesRepository : Repository<Quote>, IQuotesRepository
             .ThenInclude(p => p.QuoteProducts
                 .Where(qp => qp.QuoteId == id)
             )
-            .AsSplitQuery()
             .AsNoTracking()
+            .AsSplitQuery()
             .FirstOrDefaultAsync(q => q.QuoteId == id);
 
         return detailedQuote;

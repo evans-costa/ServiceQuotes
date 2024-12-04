@@ -28,13 +28,18 @@ public class QuoteController : ControllerBase
     [SwaggerOperation(Summary = "Buscar todas as cotações paginadas")]
     public async Task<ActionResult<IEnumerable<QuoteResponseDTO>>> GetAllQuotes([FromQuery] QueryParameters quoteParams)
     {
-        _logger.LogInformation("### Get all quotes: GET api/qutoe/ ###");
+        _logger.LogInformation("### Get all quotes: GET api/quote/ ###");
 
         var (quotes, metadata) = await _quoteService.GetAllQuotes(quoteParams);
 
         Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
 
-        return Ok(quotes);
+        var response = new
+        {
+            quotes
+        };
+
+        return Ok(response);
     }
 
     [HttpGet("{id:int}", Name = "GetQuoteDetailsById")]
@@ -78,7 +83,10 @@ public class QuoteController : ControllerBase
         _logger.LogInformation("### Create a quote: POST api/quote");
 
         var newQuoteDto = await _quoteService.CreateQuote(quoteWithProductsDto);
-        await _quoteService.SaveInvoiceOnQuote(newQuoteDto.QuoteId);
+
+        string fileUrl = await _quoteService.GenerateInvoiceOnQuote(newQuoteDto.QuoteId);
+
+        newQuoteDto.FileUrl = fileUrl;
 
         return new CreatedAtRouteResult("GetQuoteDetailsById", new { id = newQuoteDto.QuoteId }, newQuoteDto);
     }
